@@ -1,0 +1,20 @@
+[Unit]
+Description=Log Agent AI Watcher (Open WebUI)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+# Adjust this path based on where you clone the repository
+WorkingDirectory=/opt/log_agent/src
+# Use the virtual environment Python
+ExecStart=/opt/log_agent/venv/bin/python watcher.py
+Restart=always
+RestartSec=5
+
+# Optional: Add environment variables if you prefer configuring via env
+# Environment="LOG_AGENT_BASE_DIR=/opt/log_agent"
+# Environment="LOG_AGENT_API_URL=http://localhost:3000/api/chat/completions"
+
+[Install]
+WantedBy=multi-user.target
