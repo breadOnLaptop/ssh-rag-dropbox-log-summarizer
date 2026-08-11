@@ -17,14 +17,26 @@ def get_local_ip():
     return ip
 
 def launch_app():
-    # 1. Setup Paths (Cross-platform support)
-    cwd = os.getcwd()
+    # 1. Setup Paths (Cross-platform support, Path-Independent)
+    # Get the directory where this script is located, then find the parent directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(script_dir) 
+    
     is_windows = platform.system() == "Windows"
 
-    if is_windows:
-        venv_executable = os.path.join(cwd, ".venv", "Scripts", "open-webui.exe")
-    else:
-        venv_executable = os.path.join(cwd, ".venv", "bin", "open-webui")
+    # Look in both 'venv' and '.venv' just in case
+    possible_venvs = ["venv", ".venv"]
+    venv_executable = None
+
+    for v in possible_venvs:
+        if is_windows:
+            test_path = os.path.join(base_dir, v, "Scripts", "open-webui.exe")
+        else:
+            test_path = os.path.join(base_dir, v, "bin", "open-webui")
+            
+        if os.path.exists(test_path):
+            venv_executable = test_path
+            break
 
     if not os.path.exists(venv_executable):
         print("❌ ERROR: Could not find the open-webui executable.")
