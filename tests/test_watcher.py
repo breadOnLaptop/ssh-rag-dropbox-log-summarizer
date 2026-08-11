@@ -76,12 +76,12 @@ def test_process_log_success(setup_env):
         assert content == "# Test Summary\nAll good."
 
 @responses.activate
-def test_process_log_file_truncation(setup_env):
+def test_process_log_file_chunking(setup_env):
     temp_dir, watcher = setup_env
     
     # Create a large test log file (larger than 1KB)
     log_path = os.path.join(temp_dir, "drop_zones", "alice", "logs_in", "large.log")
-    large_content = "A" * 2000
+    large_content = "A" * 2500  # Will create 3 chunks (1024, 1024, 452)
     with open(log_path, 'w') as f:
         f.write(large_content)
         
@@ -90,21 +90,31 @@ def test_process_log_file_truncation(setup_env):
         responses.POST,
         "http://mockapi:3000/api/chat/completions",
         json={
-            "choices": [{"message": {"content": "Truncated."}}]
+            "choices": [{"message": {"content": "Chunk summary."}}]
         },
         status=200
     )
     
     watcher.process_log(log_path)
     
-    # Verify the API was called with truncated content
-    assert len(responses.calls) == 1
-    req_body = json.loads(responses.calls[0].request.body)
-    user_msg = req_body["messages"][1]["content"]
-    assert "Log filename: large.log" in user_msg
-    # Content should be exactly 1024 A's
-    assert "A" * 1024 in user_msg
-    assert len(user_msg) == len("Log filename: large.log\n\n") + 1024
+    # Verify the API was called 3 times
+    assert len(responses.calls) == 3
+    
+    # Check the first call payload
+    req_body_1 = json.loads(responses.calls[0].request.body)
+    user_msg_1 = req_body_1["messages"][1]["content"]
+    assert "Log filename: large.log" in user_msg_1
+    assert "Chunk 1 of 3" in user_msg_1
+    assert len(user_msg_1.split("\n\n")[1]) == 1024
+    
+    # Check if report was combined
+    report_path = os.path.join(temp_dir, "drop_zones", "alice", "reports_out", "large_summary.md")
+    assert os.path.exists(report_path)
+    with open(report_path, 'r') as f:
+        content = f.read()
+        assert "# Combined Report for large.log" in content
+        assert "## Analysis for Chunk 1\nChunk summary." in content
+        assert "## Analysis for Chunk 3\nChunk summary." in content
     
 def test_process_log_missing_token(setup_env, caplog):
     temp_dir, watcher = setup_env

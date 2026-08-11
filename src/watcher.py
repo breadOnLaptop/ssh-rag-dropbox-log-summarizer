@@ -73,64 +73,84 @@ def process_log(file_path):
         logging.error(f"File no longer exists: {file_path}")
         return
 
-    # Edge Case: Handle massive log files by tailing the end
+    # Handle massive log files by splitting into chunks
     size = os.path.getsize(file_path)
+    chunks = []
+    
     if size > MAX_FILE_SIZE:
-        logging.warning(f"File {file_path} is {size} bytes. Truncating to the latest {MAX_FILE_SIZE} bytes.")
-        with open(file_path, 'rb') as f:
-            f.seek(-MAX_FILE_SIZE, os.SEEK_END)
-            log_content = f.read().decode('utf-8', errors='ignore')
+        logging.warning(f"File {file_path} is {size} bytes. Splitting into chunks of ~{MAX_FILE_SIZE} characters.")
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            while True:
+                chunk = f.read(MAX_FILE_SIZE)
+                if not chunk:
+                    break
+                chunks.append(chunk)
     else:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            log_content = f.read()
+            chunks.append(f.read())
 
     filename = os.path.basename(file_path)
     
-    # Structure the prompt for the model
-    payload = {
-        "model": MODEL,
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are a senior DevOps engineer. Analyze the provided log file. Generate a strict Markdown (.md) report containing: 1. Executive Summary, 2. Root Cause Analysis (with specific error codes), 3. Recommended Fixes."
-            },
-            {
-                "role": "user",
-                "content": f"Log filename: {filename}\n\n{log_content}"
-            }
-        ],
-        "stream": False
-    }
-
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
-    logging.info(f"Triggering inference for {username} on file {filename}...")
-    try:
-        # Timeout set high (120s) as large context processing can take time
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=120)
-        response.raise_for_status()
+    all_replies = []
+    
+    for i, chunk_content in enumerate(chunks):
+        logging.info(f"Triggering inference for {username} on file {filename} (Chunk {i+1}/{len(chunks)})...")
         
-        reply = response.json().get("choices", [{}])[0].get("message", {}).get("content", "Error parsing output.")
-        
-        # Save output strictly as .md in the user's outbox
-        out_name = f"{os.path.splitext(filename)[0]}_summary.md"
-        out_path = os.path.join(DROP_ZONES_DIR, username, "reports_out", out_name)
-        
-        # Ensure the reports_out directory exists
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        
-        with open(out_path, 'w', encoding='utf-8') as f:
-            f.write(reply)
+        if len(chunks) > 1:
+            system_prompt = "You are a senior DevOps engineer. Analyze the provided log file chunk. Provide a brief analysis pointing out errors or anomalies. Do not generate the final executive summary yet."
+            prompt_context = f"Log filename: {filename}\nChunk {i+1} of {len(chunks)}\n\n{chunk_content}"
+        else:
+            system_prompt = "You are a senior DevOps engineer. Analyze the provided log file. Generate a strict Markdown (.md) report containing: 1. Executive Summary, 2. Root Cause Analysis (with specific error codes), 3. Recommended Fixes."
+            prompt_context = f"Log filename: {filename}\n\n{chunk_content}"
             
-        logging.info(f"Report complete: {out_path}")
+        payload = {
+            "model": MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt_context}
+            ],
+            "stream": False
+        }
+
+        try:
+            # Timeout set high (120s) as large context processing can take time
+            response = requests.post(API_URL, headers=headers, json=payload, timeout=120)
+            response.raise_for_status()
+            
+            reply = response.json().get("choices", [{}])[0].get("message", {}).get("content", "Error parsing output.")
+            all_replies.append(reply)
+            
+        except requests.exceptions.RequestException as e:
+            logging.error(f"API Request Error for {filename} chunk {i+1}: {e}")
+            all_replies.append(f"Error processing chunk {i+1}: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected Error processing {filename} chunk {i+1}: {e}")
+            all_replies.append(f"Unexpected Error processing chunk {i+1}: {e}")
+
+    # Combine all chunk analyses if there are multiple chunks
+    if len(chunks) > 1:
+        final_report = f"# Combined Report for {filename}\n\n"
+        for i, reply in enumerate(all_replies):
+            final_report += f"## Analysis for Chunk {i+1}\n{reply}\n\n---\n\n"
+    else:
+        final_report = all_replies[0]
         
-    except requests.exceptions.RequestException as e:
-        logging.error(f"API Request Error for {filename}: {e}")
-    except Exception as e:
-        logging.error(f"Unexpected Error processing {filename}: {e}")
+    # Save output strictly as .md in the user's outbox
+    out_name = f"{os.path.splitext(filename)[0]}_summary.md"
+    out_path = os.path.join(DROP_ZONES_DIR, username, "reports_out", out_name)
+    
+    # Ensure the reports_out directory exists
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    
+    with open(out_path, 'w', encoding='utf-8') as f:
+        f.write(final_report)
+        
+    logging.info(f"Report complete: {out_path}")
 
 
 def worker():
