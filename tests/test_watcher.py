@@ -15,7 +15,7 @@ def setup_env():
     os.environ["LOG_AGENT_BASE_DIR"] = temp_dir
     os.environ["LOG_AGENT_CONFIG_PATH"] = os.path.join(temp_dir, "config", "user_keys.json")
     os.environ["LOG_AGENT_DROP_ZONES_DIR"] = os.path.join(temp_dir, "drop_zones")
-    os.environ["LOG_AGENT_API_URL"] = "http://mockapi:3000/api/chat/completions"
+    os.environ["LOG_AGENT_API_URL"] = "http://mockapi:8080/api/chat/completions"
     os.environ["LOG_AGENT_MAX_FILE_SIZE"] = str(1024) # 1KB for testing
     
     # Reload watcher config for test
@@ -23,7 +23,7 @@ def setup_env():
     watcher.BASE_DIR = temp_dir
     watcher.CONFIG_PATH = os.path.join(temp_dir, "config", "user_keys.json")
     watcher.DROP_ZONES_DIR = os.path.join(temp_dir, "drop_zones")
-    watcher.API_URL = "http://mockapi:3000/api/chat/completions"
+    watcher.API_URL = "http://mockapi:8080/api/chat/completions"
     watcher.MAX_FILE_SIZE = 1024
     
     # Setup directories
@@ -52,7 +52,7 @@ def test_process_log_success(setup_env):
     # Mock the API response
     responses.add(
         responses.POST,
-        "http://mockapi:3000/api/chat/completions",
+        "http://mockapi:8080/api/chat/completions",
         json={
             "choices": [
                 {
@@ -88,7 +88,7 @@ def test_process_log_file_chunking(setup_env):
     # Mock the API response
     responses.add(
         responses.POST,
-        "http://mockapi:3000/api/chat/completions",
+        "http://mockapi:8080/api/chat/completions",
         json={
             "choices": [{"message": {"content": "Chunk summary."}}]
         },

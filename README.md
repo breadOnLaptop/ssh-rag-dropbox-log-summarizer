@@ -79,6 +79,6 @@ The daemon can be customized by exporting these environment variables (can be ad
 - `LOG_AGENT_BASE_DIR` (default: `/opt/log_agent`)
 - `LOG_AGENT_CONFIG_PATH` (default: `<BASE_DIR>/config/user_keys.json`)
 - `LOG_AGENT_DROP_ZONES_DIR` (default: `<BASE_DIR>/drop_zones`)
-- `LOG_AGENT_API_URL` (default: `http://localhost:3000/api/chat/completions`)
+- `LOG_AGENT_API_URL` (default: `http://localhost:8080/api/chat/completions`)
 - `LOG_AGENT_MODEL` (default: `gemma-4`)
 - `LOG_AGENT_MAX_FILE_SIZE` (default: `1048576` bytes / 1MB)

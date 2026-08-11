@@ -14,7 +14,7 @@ CONFIG_PATH = os.getenv("LOG_AGENT_CONFIG_PATH", os.path.join(BASE_DIR, "config"
 DROP_ZONES_DIR = os.getenv("LOG_AGENT_DROP_ZONES_DIR", os.path.join(BASE_DIR, "drop_zones"))
 
 # Open WebUI API endpoints
-API_URL = os.getenv("LOG_AGENT_API_URL", "http://localhost:3000/api/chat/completions")
+API_URL = os.getenv("LOG_AGENT_API_URL", "http://localhost:8080/api/chat/completions")
 MODEL = os.getenv("LOG_AGENT_MODEL", "gemma-4")
 
 # Max context limit to prevent OOM crashes
