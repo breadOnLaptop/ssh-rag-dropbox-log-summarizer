@@ -20,7 +20,7 @@ sequenceDiagram
     participant User as End User (Laptop)
     participant Server as Central Server (Drop Zones)
     participant Daemon as Watcher Daemon (Python)
-    participant AI as Open WebUI (Local Port 8080)
+    participant AI as Ollama (Local Port 11434)
 
     User->>Server: 1. scp error.log user@server:/opt/log_agent/drop_zones/user/logs_in/
     Server-->>Daemon: 2. on_closed Event Triggered
@@ -49,19 +49,7 @@ chmod +x scripts/setup.sh
 sudo ./scripts/setup.sh
 ```
 
-### 3. API Token Configuration
-You must configure your API tokens mapping local usernames to their respective Open WebUI keys.
-```bash
-sudo nano /opt/log_agent/config/user_keys.json
-```
-```json
-{
-    "alice": "sk-your-openwebui-api-key-for-alice",
-    "bob": "sk-your-openwebui-api-key-for-bob"
-}
-```
-
-### 4. Enable Background Service
+### 3. Enable Background Service
 Start the systemd service so the daemon persists across server reboots.
 ```bash
 sudo cp systemd/log_agent.service /etc/systemd/system/
@@ -69,7 +57,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now log_agent
 ```
 
-### 5. Automated Disk Cleanup (Optional but Recommended)
+### 4. Automated Disk Cleanup (Optional but Recommended)
 To prevent logs from consuming your server's disk space, add a cron job:
 ```bash
 sudo crontab -e
@@ -102,7 +90,6 @@ scp my_user@central_server_ip:/opt/log_agent/drop_zones/my_user/reports_out/my_s
 The daemon can be customized by exporting these environment variables (can be added directly to the `systemd/log_agent.service` file):
 
 - `LOG_AGENT_BASE_DIR` (default: `/opt/log_agent`)
-- `LOG_AGENT_CONFIG_PATH` (default: `<BASE_DIR>/config/user_keys.json`)
 - `LOG_AGENT_DROP_ZONES_DIR` (default: `<BASE_DIR>/drop_zones`)
 - `LOG_AGENT_API_URL` (default: `http://10.221.51.121:11434/api/chat`)
 - `LOG_AGENT_MODEL` (default: `gemma4:12b`)
@@ -112,7 +99,7 @@ The daemon can be customized by exporting these environment variables (can be ad
 
 ## 🧪 Testing
 
-This project includes a comprehensive `pytest` suite that mocks the Open WebUI API to test chunking, structural limits, and user configurations without using real GPU compute.
+This project includes a comprehensive `pytest` suite that mocks the Ollama API to test chunking, structural limits, and user configurations without using real GPU compute.
 
 ```bash
 python3 -m venv venv
