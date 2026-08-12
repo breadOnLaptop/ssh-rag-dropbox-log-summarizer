@@ -83,7 +83,8 @@ def process_log(file_path):
             response = requests.post(API_URL, headers=headers, json=payload, timeout=120)
             response.raise_for_status()
             
-            reply = response.json().get("choices", [{}])[0].get("message", {}).get("content", "Error parsing output.")
+            # Parse native Ollama API response structure
+            reply = response.json().get("message", {}).get("content", "Error parsing output.")
             all_replies.append(reply)
             
             # 2. Store back in RAG Context

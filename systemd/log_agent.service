@@ -14,7 +14,7 @@ RestartSec=5
 
 # Optional: Add environment variables if you prefer configuring via env
 # Environment="LOG_AGENT_BASE_DIR=/opt/log_agent"
-# Environment="LOG_AGENT_API_URL=http://localhost:8080/api/chat/completions"
+# Environment="LOG_AGENT_API_URL=http://10.221.51.121:11434/api/chat"
 
 [Install]
 WantedBy=multi-user.target

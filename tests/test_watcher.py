@@ -14,7 +14,7 @@ def setup_env():
     os.environ["LOG_AGENT_BASE_DIR"] = temp_dir
     os.environ["LOG_AGENT_DROP_ZONES_DIR"] = os.path.join(temp_dir, "drop_zones")
     os.environ["RAG_DB_PATH"] = os.path.join(temp_dir, "rag_context.db")
-    os.environ["LOG_AGENT_API_URL"] = "http://mockapi:8080/api/chat/completions"
+    os.environ["LOG_AGENT_API_URL"] = "http://mockapi:11434/api/chat"
     os.environ["LOG_AGENT_MAX_FILE_SIZE"] = str(1024)
     
     # Reload modules
@@ -22,7 +22,7 @@ def setup_env():
     config.BASE_DIR = temp_dir
     config.DROP_ZONES_DIR = os.path.join(temp_dir, "drop_zones")
     config.RAG_DB_PATH = os.path.join(temp_dir, "rag_context.db")
-    config.API_URL = "http://mockapi:8080/api/chat/completions"
+    config.API_URL = "http://mockapi:11434/api/chat"
     config.MAX_FILE_SIZE = 1024
     
     import src.watcher as watcher
@@ -53,8 +53,8 @@ def test_process_log_success(setup_env):
         
     responses.add(
         responses.POST,
-        "http://mockapi:8080/api/chat/completions",
-        json={"choices": [{"message": {"content": "| Line | Root Cause | Fix |\n|---|---|---|"}}] },
+        "http://mockapi:11434/api/chat",
+        json={"message": {"content": "| Line | Root Cause | Fix |\n|---|---|---|"}},
         status=200
     )
     
@@ -78,8 +78,8 @@ def test_process_log_file_chunking(setup_env):
         
     responses.add(
         responses.POST,
-        "http://mockapi:8080/api/chat/completions",
-        json={"choices": [{"message": {"content": "Chunk matrix."}}] },
+        "http://mockapi:11434/api/chat",
+        json={"message": {"content": "Chunk matrix."}},
         status=200
     )
     

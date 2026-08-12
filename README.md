@@ -9,7 +9,7 @@ This setup leverages an **SSH/SCP Drop Zone Architecture** combined with a singl
 ## 🌟 Key Benefits & Architecture
 
 1. **Zero Setup for End-Users**: End-users do not need Python, Open WebUI, or GPU hardware. They simply securely copy (SCP) their log files into a designated network folder.
-2. **Centralized AI Server**: By running a single instance of Open WebUI on the main server (port 8080), you save on GPU costs and consolidate your infrastructure.
+2. **Centralized AI Server**: By running a single instance of Ollama on the main server (port 11434), you save on GPU costs and consolidate your infrastructure.
 3. **Automatic Chunking for Massive Logs**: If a user uploads a log file larger than the configured limit (default: 1MB), the daemon automatically splits the file into manageable chunks, queries the AI sequentially, and stitches the partial analysis into one unified Markdown report.
 4. **Queue-Based Throttling**: If multiple users upload logs simultaneously, the daemon queues the requests to process them one at a time, ensuring the central AI model never runs out of memory (OOM).
 
@@ -104,8 +104,8 @@ The daemon can be customized by exporting these environment variables (can be ad
 - `LOG_AGENT_BASE_DIR` (default: `/opt/log_agent`)
 - `LOG_AGENT_CONFIG_PATH` (default: `<BASE_DIR>/config/user_keys.json`)
 - `LOG_AGENT_DROP_ZONES_DIR` (default: `<BASE_DIR>/drop_zones`)
-- `LOG_AGENT_API_URL` (default: `http://localhost:8080/api/chat/completions`)
-- `LOG_AGENT_MODEL` (default: `gemma-4`)
+- `LOG_AGENT_API_URL` (default: `http://10.221.51.121:11434/api/chat`)
+- `LOG_AGENT_MODEL` (default: `gemma4:12b`)
 - `LOG_AGENT_MAX_FILE_SIZE` (default: `1048576` bytes / 1MB)
 
 ---
