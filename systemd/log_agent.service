@@ -1,20 +1,22 @@
 [Unit]
-Description=Log Agent AI Watcher (Open WebUI)
+Description=Log Agent AI Watcher (Ollama)
 After=network.target
 
 [Service]
 Type=simple
 User=root
-# Adjust this path based on where you clone the repository
-WorkingDirectory=/opt/log_agent/src
-# Use the virtual environment Python
-ExecStart=/opt/log_agent/venv/bin/python watcher.py
+WorkingDirectory=/opt/log_agent
+ExecStart=/opt/log_agent/venv/bin/python -m src.watcher
 Restart=always
 RestartSec=5
 
-# Optional: Add environment variables if you prefer configuring via env
-# Environment="LOG_AGENT_BASE_DIR=/opt/log_agent"
-# Environment="LOG_AGENT_API_URL=http://10.221.51.121:11434/api/chat"
+# Environment Configuration
+Environment="LOG_AGENT_BASE_DIR=/opt/log_agent"
+Environment="LOG_AGENT_DROP_ZONES_DIR=/opt/log_agent/drop_zones"
+Environment="RAG_DB_PATH=/opt/log_agent/rag_context.db"
+Environment="LOG_AGENT_API_URL=http://10.221.51.121:11434/api/chat"
+Environment="LOG_AGENT_MODEL=gemma4:12b"
+Environment="LOG_AGENT_MAX_FILE_SIZE=1048576"
 
 [Install]
 WantedBy=multi-user.target
